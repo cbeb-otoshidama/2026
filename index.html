@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COMBRIDGE&EB お年玉くじ</title>
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      text-align: center;
+      font-family: "Hiragino Maru Gothic Pro", "Comic Sans MS", sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(to bottom, #fff5f5, #ffe6cc);
+      padding: 30px;
+    }
+
+    h2 {
+      color: #d00000;
+      font-size: 36px;
+      margin-bottom: 25px;
+      text-shadow: 2px 2px #ffd700;
+    }
+    
+    .notice {
+      font-size: 14px;
+      color: #330000;
+      font-weight: 500;
+      margin: 10px 0 20px;
+    }
+
+    input {
+      width: 200px;
+      padding: 8px;
+      margin: 8px;
+      border-radius: 10px;
+      border: 2px solid #d00000;
+      font-size: 14px;
+      outline: none;
+    }
+
+    button {
+      background: linear-gradient(to bottom, #d00000, #ff6666);
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px;
+      border-radius: 30px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px #dcdcdc;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: linear-gradient(to bottom, #ff6666, #d00000);
+      transform: scale(1.05);
+    }
+
+    button.disabled {
+      background: linear-gradient(to bottom, #d3d3d3, #a9a9a9);
+      color: #666666;
+      cursor: default;
+      pointer-events: none;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+      transform: none !important;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+    
+    /* PCは余白あり、スマホは詰める */
+    .info-text {
+      font-size: 13px;
+      margin-top: 10px;  /* PCで適度な間隔 */
+      margin-bottom: 0;
+    }
+    
+    @media (max-width: 480px) {
+      #resultText {
+        font-size: 32px;
+        color: #d00000;
+        font-weight: bold;
+        line-height: 1.4;
+        word-break: break-word;
+        padding: 0 10px;
+        text-shadow: 1px 1px #ffd700;
+        animation: popOut 0.5s ease-out;
+      }
+      
+      .prize-text {
+        font-size: 28px;
+        color: #d00000;
+        font-weight: bold;
+        margin-bottom: 4px;
+        margin-top: 0;
+        display: block;
+        text-shadow: 1px 1px #ffd700;
+        animation: popOut 0.5s ease-out;
+      }
+      
+      /* prize-text と infoテキストの間を詰める */
+      #resultText .prize-text {
+        margin-bottom: 8px; /* 空白を狭める */
+      }
+      
+      #resultText span {
+        line-height: 1.2; /* 全体の行間を少し詰める */
+      }
+      
+      #resultText br {
+        line-height: 0; /* brによる行間を詰める */
+        content: ""; 
+      }
+      
+      .info-text {
+         margin-top: 4px; /* スマホで間隔を狭く */
+       }
+    }
+    
+    #resultText {
+      font-size: 32px;
+      color: #d00000;
+      font-weight: bold;
+      margin-bottom: 20px;
+      margin-top: 0;
+      display: none;
+      text-shadow: 1px 1px #ffd700;
+      animation: popOut 0.5s ease-out;
+    }
+    
+    .prize-text {
+      font-size: 26px;
+      color: #d00000;
+      font-weight: bold;
+      margin-bottom: 20px;
+      margin-top: 0;
+      text-shadow: 1px 1px #ffd700;
+      animation: popOut 0.5s ease-out;
+    }
+
+    @keyframes popOut {
+      0% { opacity: 0; transform: scale(0.6); }
+      50% { opacity: 1; transform: scale(1.1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .mail-link,
+    .mail-link:visited,
+    .mail-link:hover,
+    .mail-link:active {
+      color: #d00000 !important;
+      text-decoration: underline;
+      font-weight: bold;
+      opacity: 1;
+    }
+
+    #box {
+      width: 300px;
+      height: 300px;
+      margin: 30px auto 0 auto;
+      position: relative;
+    }
+
+    .box-icon {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 15px;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .shake { animation: shake 2s ease-in-out; }
+
+    @keyframes shake {
+      0% { transform: rotate(0deg); }
+      10% { transform: rotate(10deg); }
+      20% { transform: rotate(-10deg); }
+      30% { transform: rotate(10deg); }
+      40% { transform: rotate(-10deg); }
+      50% { transform: rotate(5deg); }
+      60% { transform: rotate(-5deg); }
+      70% { transform: rotate(5deg); }
+      80% { transform: rotate(-5deg); }
+      90% { transform: rotate(2deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    /* ポップアップ */
+    #popupOverlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      z-index: 1000;
+    }
+
+    #popupContent {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 30px 25px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 320px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      animation: popupZoom 0.4s ease-out;
+    }
+
+    @keyframes popupZoom {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @media (max-width:480px){
+      body { padding:20px; }
+      h2 { font-size:42px; }
+      #resultText { font-size:30px; }
+      #box { width:260px; height:260px; margin-top:25px; }
+      input { width:200px; font-size:14px; }
+      button { font-size:14px; padding:8px 24px; margin-top:10px; }
+      #popupContent { width:70%; max-width:360px; padding:32px 26px; }
+      #popupContent h3 { font-size:20px; }
+      #popupContent p { font-size:15px; }
+      #popupContent input { width:70%; font-size:14px; }
+    }
+  </style>
+</head>
+
+<body>
+<h2>COMBRIDGE&EB<br>お年玉くじ</h2>
+
+<p id="noticeText" class="notice">
+  おひとり様1回のみご参加いただけます<br>
+  新年の運試しに奮ってご参加ください！
+</p>
+  
+<input id="name" type="text" placeholder="お名前を入力してください"><br>
+<button id="drawButton" onclick="draw()">くじを引く</button>
+<p id="resultText"></p>
+
+<div id="box">
+  <img src="box_icon.png" class="box-icon">
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwumwjQ2R7sa80IkXm17-CNaPtYefU4Lwlx1VKtMusly_H35tEAinsWLQkEIadARnOA/exec";
+let lotteryId = "";
+
+// ===== ブラウザUUID（clientId） =====
+function getClientId() {
+  let id = localStorage.getItem("clientId");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("clientId", id);
+  }
+  return id;
+}
+
+const clientId = getClientId();
+
+async function draw() {
+  const name = document.getElementById("name").value;
+  if(!name){ alert("お名前を入力してください"); return; }
+
+  document.getElementById("noticeText").style.display = "none";
+  document.getElementById("drawButton").style.display = "none";
+  document.getElementById("name").style.display = "none";
+
+  const box = document.getElementById("box");
+  const resultText = document.getElementById("resultText");
+  resultText.style.display = "none";
+
+  box.classList.add("shake");
+
+  const fetchPromise = fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+    mode: "draw",
+    name,
+    clientId
+    })
+  }).then(res => res.json());
+  
+  await new Promise(resolve=>{
+    box.addEventListener("animationend", function handler(){
+      box.classList.remove("shake");
+      box.removeEventListener("animationend", handler);
+      resolve();
+    });
+  });
+
+  const data = await fetchPromise;
+
+  if (data.status === "already") {
+    alert("参加済みです。\nおひとり様1回までとなります。");
+    return;
+  }
+  
+  if(data.status==="empty"){
+    setTimeout(()=>{ 
+      resultText.innerHTML = '<span class="result-text">くじがありません</span>'; 
+      resultText.style.display="block";
+    },400); 
+    return;
+  }
+
+  lotteryId = data.lotteryId;
+  let message = '<span class="result-text">＼ '+data.result+' ／</span><br>'+
+                '<span class="prize-text">'+data.prize+'</span>';
+
+  if(data.result==="はずれ"){
+    message += "<span style='font-size:24px; display:block; margin-top:4px;'>本年もどうぞよろしくお願いします</span>";
+  }
+  if(data.result==="あたり"){
+    message += '<div class="info-text">ポップアップが表示されない場合は<a href="mailto:cbeb_info@cb-eb.co.jp?subject=お年玉くじ%20当選連絡&body=後日担当者よりご連絡いたします。会社名・お名前を入力のうえ、送信してください。" class="mail-link">info</a>へご連絡ください</div>';
+  }
+
+  resultText.innerHTML = message;
+  resultText.style.display = "block";
+
+  if(data.result==="あたり"){
+    setTimeout(()=>{ document.getElementById("popupOverlay").style.display="flex"; },2300);
+  }
+}
+</script>
+
+<!-- ポップアップ -->
+<div id="popupOverlay">
+  <div id="popupContent">
+    <div id="popupForm">
+      <h3 style="color:#d00000; margin-top:0;">当選おめでとうございます 🎉</h3>
+      <p style="font-size:14px; margin-bottom:10px;">後日担当者よりご連絡いたします<br>メールアドレスをご入力ください</p>
+      <input id="email" type="email" placeholder="メールアドレス"><br>
+      <button onclick="sendEmail()">登録</button>
+    </div>
+    <div id="popupComplete" style="display:none;">
+      <h3 style="color:#d00000; margin-top:0;">✔ 登録完了</h3>
+      <p style="font-size:15px;">メールアドレスの登録が完了しました</p>
+    </div>
+  </div>
+</div>
+
+<script>
+async function sendEmail(){
+  const email = document.getElementById("email").value;
+  const btn = document.querySelector("#popupForm button");
+  if(!email){ alert("メールアドレスを入力してください"); return; }
+
+  btn.disabled=true; btn.innerText="登録中..."; btn.classList.add("disabled");
+
+  await fetch(API_URL, { method:"POST", body:JSON.stringify({mode:"saveEmail", lotteryId, email}) });
+
+  document.getElementById("popupForm").style.display="none";
+  document.getElementById("popupComplete").style.display="block";
+
+  setTimeout(()=>{
+    document.getElementById("popupOverlay").style.display="none";
+    btn.disabled=false; btn.innerText="登録"; btn.classList.remove("disabled");
+    document.getElementById("popupForm").style.display="block";
+    document.getElementById("popupComplete").style.display="none";
+  },2500);
+}
+</script>
+
+</body>
+</html>
